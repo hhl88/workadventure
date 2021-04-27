@@ -18,7 +18,7 @@ const audioConstraint: boolean|MediaTrackConstraints = {
     //TODO: make these values configurable in the game settings menu and store them in localstorage
     autoGainControl: false,
     echoCancellation: true,
-    noiseSuppression: false
+    noiseSuppression: true
 };
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
@@ -45,6 +45,10 @@ export class MediaManager {
         audio: audioConstraint,
         video: videoConstraint
     };
+    updatedVideoLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
+    updatedAudioLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
+
+
     updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
@@ -148,6 +152,14 @@ export class MediaManager {
         this.updatedLocalStreamCallBacks.add(callback);
     }
 
+    public onUpdateVideoLocalStream(callback: UpdatedLocalStreamCallback): void {
+        this.updatedVideoLocalStreamCallBacks.add(callback);
+    }
+
+    public onUpdateAudioLocalStream(callback: UpdatedLocalStreamCallback): void {
+        this.updatedAudioLocalStreamCallBacks.add(callback);
+    }
+
     public onStartScreenSharing(callback: StartScreenSharingCallback): void {
         this.startScreenSharingCallBacks.add(callback);
     }
@@ -158,6 +170,26 @@ export class MediaManager {
 
     removeUpdateLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
         this.updatedLocalStreamCallBacks.delete(callback);
+    }
+
+    removeUpdateVideoLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
+        this.updatedVideoLocalStreamCallBacks.delete(callback);
+    }
+
+    removeUpdateAudioLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
+        this.updatedAudioLocalStreamCallBacks.delete(callback);
+    }
+
+    private triggerUpdatedVideoLocalStreamCallbacks(stream: MediaStream|null): void {
+        for (const callback of this.updatedVideoLocalStreamCallBacks) {
+            callback(stream);
+        }
+    }
+
+    private triggerUpdatedAudioLocalStreamCallbacks(stream: MediaStream|null): void {
+        for (const callback of this.updatedAudioLocalStreamCallBacks) {
+            callback(stream);
+        }
     }
 
     private triggerUpdatedLocalStreamCallbacks(stream: MediaStream|null): void {
@@ -208,6 +240,7 @@ export class MediaManager {
         this.constraintsMedia.video = videoConstraint;
         this.getCamera().then((stream: MediaStream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
+            this.triggerUpdatedVideoLocalStreamCallbacks(stream);
         });
     }
 
@@ -222,6 +255,7 @@ export class MediaManager {
             }
             this.enableCameraStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
+            this.triggerUpdatedVideoLocalStreamCallbacks(stream);
         }).catch((err) => {
             console.error(err);
             this.disableCameraStyle();
@@ -234,6 +268,7 @@ export class MediaManager {
         if (this.constraintsMedia.audio !== false) {
             const stream = await this.getCamera();
             this.triggerUpdatedLocalStreamCallbacks(stream);
+            this.triggerUpdatedVideoLocalStreamCallbacks(stream);
         } else {
             this.triggerUpdatedLocalStreamCallbacks(null);
         }
@@ -250,6 +285,7 @@ export class MediaManager {
             }
             this.enableMicrophoneStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
+            this.triggerUpdatedAudioLocalStreamCallbacks(stream);
         }).catch((err) => {
             console.error(err);
             this.disableMicrophoneStyle();
@@ -263,6 +299,7 @@ export class MediaManager {
         if (this.constraintsMedia.video !== false) {
             const stream = await this.getCamera();
             this.triggerUpdatedLocalStreamCallbacks(stream);
+            this.triggerUpdatedAudioLocalStreamCallbacks(stream);
         } else {
             this.triggerUpdatedLocalStreamCallbacks(null);
         }
@@ -314,12 +351,22 @@ export class MediaManager {
         this.constraintsMedia.audio = false;
     }
 
+    enableScreenSharingStyle() {
+        this.monitorClose.style.display = "none";
+        this.monitor.style.display = "block";
+        this.monitorBtn.classList.add("enabled");
+    }
+
+    disableScreenSharingStyle() {
+        this.monitorClose.style.display = "block";
+        this.monitor.style.display = "none";
+        this.monitorBtn.classList.remove("enabled");
+    }
+
     private enableScreenSharing() {
         this.getScreenMedia().then((stream) => {
             this.triggerStartedScreenSharingCallbacks(stream);
-            this.monitorClose.style.display = "none";
-            this.monitor.style.display = "block";
-            this.monitorBtn.classList.add("enabled");
+            this.enableScreenSharingStyle();
         }, () => {
             this.monitorClose.style.display = "block";
             this.monitor.style.display = "none";
@@ -329,9 +376,10 @@ export class MediaManager {
     }
 
     private disableScreenSharing() {
-        this.monitorClose.style.display = "block";
-        this.monitor.style.display = "none";
-        this.monitorBtn.classList.remove("enabled");
+        this.disableScreenSharingStyle();
+        // this.monitorClose.style.display = "block";
+        // this.monitor.style.display = "none";
+        // this.monitorBtn.classList.remove("enabled");
         this.removeActiveScreenSharingVideo('me');
         this.localScreenCapture?.getTracks().forEach((track: MediaStreamTrack) => {
             track.stop();
@@ -423,7 +471,7 @@ export class MediaManager {
 
     private getLocalStream() : Promise<MediaStream> {
         return navigator.mediaDevices.getUserMedia(this.constraintsMedia).then((stream : MediaStream) => {
-            this.localStream = stream;
+            this.localStream = stream.clone();
             this.myCamVideo.srcObject = this.localStream;
             return stream;
         }).catch((err: Error) => {
@@ -483,7 +531,7 @@ export class MediaManager {
 
         userName = userName.toUpperCase();
         const color = this.getColorByString(userName);
-
+        // const color = 'f30900';
         const html =  `
             <div id="div-${userId}" class="video-container">
                 <div class="connecting-spinner"></div>
@@ -517,6 +565,50 @@ export class MediaManager {
             e.stopPropagation();
             showReportUser();
         });
+    }
+
+    addSeeMeActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
+        const userId = ''+user.userId
+
+        const element = document.getElementById(`name-${userId}`);
+        if(!element) {
+            // this.webrtcInAudio.play();
+            // const color = this.getColorByString(userName);
+            const color = '#f30900';
+            const html =  `
+            <div id="div-${userId}" class="video-container">
+                <div class="rtc-error" style="display: none"></div>
+                <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
+                <img id="microphone-${userId}" title="mute" src="resources/logos/microphone-close.svg">
+                <button id="report-${userId}" class="report">
+                    <img title="report this user" src="resources/logos/report.svg">
+                    <span>Report/Block</span>
+                </button>
+                <video id="${userId}" autoplay></video>
+                <img src="resources/logos/blockSign.svg" id="blocking-${userId}" class="block-logo">
+            </div>
+        `;
+
+            layoutManager.add(DivImportance.Normal, userId, html);
+
+            this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
+
+            //permit to create participant in discussion part
+            const showReportUser = () => {
+                for(const callBack of this.showReportModalCallBacks){
+                    callBack(userId, userName);
+                }
+            };
+            this.addNewParticipant(userId, userName, undefined, showReportUser);
+
+            const reportBanUserActionEl: HTMLImageElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>(`report-${userId}`);
+            reportBanUserActionEl.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showReportUser();
+            });
+        }
+
     }
     
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
@@ -603,9 +695,11 @@ export class MediaManager {
         //permit to remove user in discussion part
         this.removeParticipant(userId);
     }
+
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(this.getScreenSharingId(userId))
     }
+
     
     playWebrtcOutSound(): void {
         this.webrtcOutAudio.play();

@@ -10,12 +10,15 @@ import {
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage, RefreshRoomPromptMessage,
+    QueryJitsiJwtMessage,
+    RefreshRoomPromptMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
+    UserJoinedSeeMeRoomMessage,
     UserMovesMessage,
-    WebRtcSignalToServerMessage, WorldFullWarningToRoomMessage,
+    WebRtcSignalToServerMessage,
+    WorldFullWarningToRoomMessage,
     ZoneMessage
 } from "./Messages/generated/messages_pb";
 import {sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream} from "grpc";
@@ -33,16 +36,17 @@ export type ZoneSocket = ServerWritableStream<ZoneMessage, ServerToClientMessage
 
 const roomManager: IRoomManagerServer = {
     joinRoom: (call: UserSocket): void => {
-        console.log('joinRoom called');
-
-        let room: GameRoom|null = null;
-        let user: User|null = null;
+        let room: GameRoom | null = null;
+        let user: User | null = null;
 
         call.on('data', (message: PusherToBackMessage) => {
             try {
                 if (room === null || user === null) {
                     if (message.hasJoinroommessage()) {
-                        socketManager.handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage).then(({room: gameRoom, user: myUser}) => {
+                        socketManager.handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage).then(({
+                                                                                                                      room: gameRoom,
+                                                                                                                      user: myUser
+                                                                                                                  }) => {
                             if (call.writable) {
                                 room = gameRoom;
                                 user = myUser;
@@ -69,18 +73,20 @@ const roomManager: IRoomManagerServer = {
                         socketManager.emitScreenSharing(room, user, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage);
                     } else if (message.hasPlayglobalmessage()) {
                         socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
-                    } else if (message.hasQueryjitsijwtmessage()){
+                    } else if (message.hasQueryjitsijwtmessage()) {
                         socketManager.handleQueryJitsiJwtMessage(user, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
-                    }else if (message.hasSendusermessage()) {
+                    } else if (message.hasSendusermessage()) {
                         const sendUserMessage = message.getSendusermessage();
-                        if(sendUserMessage !== undefined) {
+                        if (sendUserMessage !== undefined) {
                             socketManager.handlerSendUserMessage(user, sendUserMessage);
                         }
-                    }else if (message.hasBanusermessage()) {
+                    } else if (message.hasBanusermessage()) {
                         const banUserMessage = message.getBanusermessage();
-                        if(banUserMessage !== undefined) {
+                        if (banUserMessage !== undefined) {
                             socketManager.handlerBanUserMessage(room, user, banUserMessage);
                         }
+                    } else if (message.hasUserjoinedseemeroommessage()) {
+                        socketManager.handleUserJoinedSeeMeRoomMessage(user, message.getUserjoinedseemeroommessage() as UserJoinedSeeMeRoomMessage);
                     } else {
                         throw new Error('Unhandled message type');
                     }
@@ -119,7 +125,7 @@ const roomManager: IRoomManagerServer = {
             socketManager.removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY());
             call.end();
         })
-        
+
         call.on('close', () => {
             debug('listenZone connection closed');
             socketManager.removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY());
@@ -134,7 +140,7 @@ const roomManager: IRoomManagerServer = {
         console.log('adminRoom called');
 
         const admin = new Admin(call);
-        let room: GameRoom|null = null;
+        let room: GameRoom | null = null;
 
         call.on('data', (message: AdminPusherToBackMessage) => {
             try {

@@ -39,7 +39,7 @@ async function startOneUser(): Promise<void> {
         const x = Math.floor(320 + 1472/2 * (1 + Math.sin(angle)));
         const y = Math.floor(200 + 1090/2 * (1 + Math.cos(angle)));
 
-        connection.sharePosition(x, y, 'down', true, {
+        connection.sharePosition(x, y, 'down', true,{
             top: y - 200,
             bottom: y + 200,
             left: x - 320,

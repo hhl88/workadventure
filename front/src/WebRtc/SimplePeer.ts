@@ -21,6 +21,7 @@ export interface UserSimplePeerInterface{
     initiator?: boolean;
     webRtcUser?: string|undefined;
     webRtcPassword?: string|undefined;
+    roomId?: number
 }
 
 export interface PeerConnectionListener {

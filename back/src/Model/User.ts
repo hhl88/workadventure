@@ -12,6 +12,7 @@ export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientM
 export class User implements Movable {
     public listenedZones: Set<Zone>;
     public group?: Group;
+    public isInSeeMeeRoom: boolean;
 
     public constructor(
         public id: number,
@@ -24,11 +25,14 @@ export class User implements Movable {
         public readonly tags: string[],
         public readonly name: string,
         public readonly characterLayers: CharacterLayer[],
-        public readonly companion?: CompanionMessage
+        public readonly companion?: CompanionMessage,
+
     ) {
         this.listenedZones = new Set<Zone>();
 
         this.positionNotifier.enter(this);
+
+        this.isInSeeMeeRoom = false;
     }
 
     public getPosition(): PointInterface {

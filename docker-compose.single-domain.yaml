@@ -22,6 +22,9 @@ services:
     image: thecodingmachine/nodejs:14
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
+      SEEME_SECURE_CONNECTION: "$SEEME_SECURE_CONNECTION"
+      MEETING_PLATFORM: $MEETING_PLATFORM
+      SEEME_URL: $SEEME_URL
       JITSI_URL: $JITSI_URL
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
@@ -92,6 +95,7 @@ services:
     volumes:
       - ./maps:/var/www/html
     labels:
+      - "traefik.http.routers.maps.rule=Host(`maps`)"
       - "traefik.http.middlewares.strip-maps-prefix.stripprefix.prefixes=/maps"
       - "traefik.http.routers.maps.rule=PathPrefix(`/maps`)"
       - "traefik.http.routers.maps.middlewares=strip-maps-prefix@docker"

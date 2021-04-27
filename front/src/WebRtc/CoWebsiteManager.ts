@@ -110,10 +110,11 @@ class CoWebsiteManager {
         this.cowebsiteDiv.classList.add('loading');
         this.opened = iframeStates.loading;
     }
-    private open(): void {
+    private open(resetStyle: boolean = true): void {
         this.cowebsiteDiv.classList.remove('loading', 'hidden'); //edit the css class to trigger the transition
         this.opened = iframeStates.opened;
-        this.resetStyle();
+        if(resetStyle)
+            this.resetStyle();
     }
 
     public resetStyle() {
@@ -127,7 +128,7 @@ class CoWebsiteManager {
         return iframe;
     }
 
-    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string): void {
+    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string, resetStyle: boolean = true): void {
         this.load();
         this.cowebsiteMainDom.innerHTML = ``;
 
@@ -148,7 +149,7 @@ class CoWebsiteManager {
             setTimeout(() => resolve(), 2000);
         });
         this.currentOperationPromise = this.currentOperationPromise.then(() =>Promise.race([onloadPromise, onTimeoutPromise])).then(() => {
-            this.open();
+            this.open(resetStyle);
             setTimeout(() => {
                 this.fire();
             }, animationTime)

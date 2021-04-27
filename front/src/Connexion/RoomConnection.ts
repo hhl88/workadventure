@@ -27,7 +27,9 @@ import {
     SendJitsiJwtMessage,
     CharacterLayerMessage,
     PingMessage,
-    SendUserMessage, BanUserMessage
+    SendUserMessage, BanUserMessage,
+    UserJoinedSeeMeRoomMessage,
+    UserLeftZoneMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -263,7 +265,7 @@ export class RoomConnection implements RoomConnection {
         return viewportMessage;
     }
 
-    public sharePosition(x : number, y : number, direction : string, moving: boolean, viewport: ViewportInterface) : void{
+    public sharePosition(x : number, y : number, direction : string, moving: boolean,viewport: ViewportInterface) : void{
         if(!this.socket){
             return;
         }
@@ -289,6 +291,16 @@ export class RoomConnection implements RoomConnection {
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setSilentmessage(silentMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public setJoinSeeMeRoom(joined: boolean): void {
+        const msg = new UserJoinedSeeMeRoomMessage();
+        msg.setJoined(joined);
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setUserjoinedseemeroommessage(msg);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
@@ -437,6 +449,7 @@ export class RoomConnection implements RoomConnection {
                 initiator: message.getInitiator(),
                 webRtcUser: message.getWebrtcusername() ?? undefined,
                 webRtcPassword: message.getWebrtcpassword() ?? undefined,
+                roomId: message.getRoomid()
             });
         });
     }

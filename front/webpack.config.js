@@ -16,7 +16,7 @@ module.exports = {
         disableHostCheck: true,
         historyApiFallback: {
             rewrites: [
-                { from: /^_\/.*$/, to: '/index.html' }
+                {from: /^_\/.*$/, to: '/index.html'}
             ],
             disableDotRule: true
         },
@@ -35,18 +35,18 @@ module.exports = {
         ],
     },
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ],
+        extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
         filename: (pathData) => {
             // Add a content hash only for the main bundle.
             // We want the iframe_api.js file to keep its name as it will be referenced from outside iframes.
-            return pathData.chunk.name === 'main' ? 'js/[name].[contenthash].js': '[name].js';
+            return pathData.chunk.name === 'main' ? 'js/[name].[contenthash].js' : '[name].js';
         },
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
-    externals:[
+    externals: [
         require('webpack-require-http')
     ],
     plugins: [
@@ -81,7 +81,10 @@ module.exports = {
             'TURN_PASSWORD': null,
             'JITSI_URL': null,
             'JITSI_PRIVATE_MODE': null,
-            'START_ROOM_URL': null
+            'START_ROOM_URL': null,
+            'SEEME_URL': null,
+            'MEETING_PLATFORM': null,
+            'SEEME_SECURE_CONNECTION': null
         })
     ],
 

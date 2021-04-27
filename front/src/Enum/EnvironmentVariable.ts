@@ -9,7 +9,11 @@ const TURN_SERVER: string = process.env.TURN_SERVER || "";
 const TURN_USER: string = process.env.TURN_USER || '';
 const TURN_PASSWORD: string = process.env.TURN_PASSWORD || '';
 const JITSI_URL : string|undefined = (process.env.JITSI_URL === '') ? undefined : process.env.JITSI_URL;
+const SEEME_URL : string|undefined = (process.env.SEEME_URL === '') ? undefined : process.env.SEEME_URL;
+const MEETING_PLATFORM : string|undefined = (process.env.MEETING_PLATFORM === '') ? undefined : process.env.MEETING_PLATFORM?.toLowerCase();
+
 const JITSI_PRIVATE_MODE : boolean = process.env.JITSI_PRIVATE_MODE == "true";
+const SEEME_SECURE_CONNECTION: boolean = process.env.SEEME_SECURE_CONNECTION == "true";
 const RESOLUTION = 2;
 const ZOOM_LEVEL = 1/*3/4*/;
 const POSITION_DELAY = 200; // Wait 200ms between sending position events
@@ -32,5 +36,8 @@ export {
     TURN_USER,
     TURN_PASSWORD,
     JITSI_URL,
-    JITSI_PRIVATE_MODE
+    JITSI_PRIVATE_MODE,
+    SEEME_URL,
+    MEETING_PLATFORM,
+    SEEME_SECURE_CONNECTION
 }

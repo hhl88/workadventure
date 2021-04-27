@@ -31,6 +31,15 @@ message SilentMessage {
   bool silent = 1;
 }
 
+message UserJoinedSeeMeRoomMessage {
+  bool joined = 1;
+}
+message UserJoinedGroupMessage {
+  int32 userId = 1;
+  int32 groupId = 2;
+  bool joined = 3;
+}
+
 message CharacterLayerMessage {
   string url = 1;
   string name = 2;
@@ -84,6 +93,7 @@ message ClientToServerMessage {
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
+    UserJoinedSeeMeRoomMessage userJoinedSeeMeRoomMessage = 13;
   }
 }
 
@@ -122,6 +132,8 @@ message SubMessage {
     UserJoinedMessage userJoinedMessage = 4;
     UserLeftMessage userLeftMessage = 5;
     ItemEventMessage itemEventMessage = 6;
+    UserJoinedSeeMeRoomMessage userJoinedSeeMeRoomMessage = 7;
+    UserJoinedGroupMessage userJoinedGroupMessage = 8;
   }
 }
 
@@ -175,6 +187,7 @@ message WebRtcStartMessage {
   bool initiator = 3;
   string webrtcUserName = 4;
   string webrtcPassword = 5;
+  int32 roomId = 6;
 }
 
 message WebRtcDisconnectMessage {
@@ -312,6 +325,7 @@ message PusherToBackMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
+    UserJoinedSeeMeRoomMessage userJoinedSeeMeRoomMessage = 14;
   }
 }
 

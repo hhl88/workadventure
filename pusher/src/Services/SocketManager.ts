@@ -22,7 +22,8 @@ import {
     WorldFullMessage,
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
-    UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage, RefreshRoomMessage
+    UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage, RefreshRoomMessage,
+    UserJoinedSeeMeRoomMessage
 } from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
@@ -166,7 +167,6 @@ export class SocketManager implements ZoneEventListener {
             }
 
 
-            console.log('Calling joinRoom')
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
@@ -236,6 +236,12 @@ export class SocketManager implements ZoneEventListener {
             console.error('An error occurred on "SET_VIEWPORT" event');
             console.error(e);
         }
+    }
+
+    handleUserJoinedSeeMeRoomMessage(client: ExSocketInterface, userJoinedSeeMeRoomMessage: UserJoinedSeeMeRoomMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setUserjoinedseemeroommessage(userJoinedSeeMeRoomMessage);
+        client.backConnection.write(pusherToBackMessage);
     }
 
     handleUserMovesMessage(client: ExSocketInterface, userMovesMessage: UserMovesMessage) {

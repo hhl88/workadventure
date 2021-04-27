@@ -12,7 +12,8 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage, CompanionMessage
+    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage, CompanionMessage,
+    UserJoinedSeeMeRoomMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
@@ -317,6 +318,8 @@ export class IoSocketController {
                     socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
                 } else if (message.hasQueryjitsijwtmessage()){
                     socketManager.handleQueryJitsiJwtMessage(client, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
+                } else if(message.hasUserjoinedseemeroommessage()) {
+                    socketManager.handleUserJoinedSeeMeRoomMessage(client, message.getUserjoinedseemeroommessage() as UserJoinedSeeMeRoomMessage)
                 }
 
                     /* Ok is false if backpressure was built up, wait for drain */
