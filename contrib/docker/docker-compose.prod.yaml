@@ -10,8 +10,8 @@ services:
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entryPoints.websecure.address=:443
-      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
-      - --certificatesresolvers.myresolver.acme.storage=/acme.json
+      - --certificatesresolvers.myresolver.acme.email=service-letsencrypt.org@1533.eu
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
       # used during the challenge
       - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
     ports:
@@ -23,25 +23,27 @@ services:
       - pusher
       - front
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./acme.json:/acme.json
+      - /run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt/:/letsencrypt/
     restart: unless-stopped
 
 
   front:
     build:
       context: ../..
-      dockerfile: front/Dockerfile
-    #image: thecodingmachine/workadventure-front:master
+      dockerfile: ./front/Dockerfile
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
-      PUSHER_URL: //pusher.${DOMAIN}
+      API_URL: pusher.${DOMAIN}
       TURN_SERVER: "${TURN_SERVER}"
       TURN_USER: "${TURN_USER}"
       TURN_PASSWORD: "${TURN_PASSWORD}"
       START_ROOM_URL: "${START_ROOM_URL}"
+      SEEME_URL: "${SEEME_URL}"
+      MEETING_PLATFORM: "${MEETING_PLATFORM}"
+      SEEME_SECURE_CONNECTION: "${SEEME_SECURE_CONNECTION}"
     labels:
       - "traefik.http.routers.front.rule=Host(`play.${DOMAIN}`)"
       - "traefik.http.routers.front.entryPoints=web,traefik"
@@ -56,15 +58,14 @@ services:
   pusher:
     build:
       context: ../..
-      dockerfile: pusher/Dockerfile
-    #image: thecodingmachine/workadventure-pusher:master
-    command: yarn run runprod
+      dockerfile: ./pusher/Dockerfile
     environment:
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
-      SECRET_KEY: yourSecretKey
+      SECRET_KEY: "$SECRET_KEY"
       API_URL: back:50051
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      #STARTUP_COMMAND_1: yarn install
     labels:
       - "traefik.http.routers.pusher.rule=Host(`pusher.${DOMAIN}`)"
       - "traefik.http.routers.pusher.entryPoints=web,traefik"
@@ -79,8 +80,7 @@ services:
   back:
     build:
       context: ../..
-      dockerfile: back/Dockerfile
-    #image: thecodingmachine/workadventure-back:master
+      dockerfile: ./back/Dockerfile
     command: yarn run runprod
     environment:
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
@@ -88,6 +88,7 @@ services:
       ADMIN_API_URL: "$ADMIN_API_URL"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+        #STARTUP_COMMAND_1: yarn install
     labels:
       - "traefik.http.routers.back.rule=Host(`api.${DOMAIN}`)"
       - "traefik.http.routers.back.entryPoints=web"
