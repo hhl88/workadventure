@@ -783,8 +783,18 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
         });
 
+        this._joinSeeMeRoom('meetingRoom');
+        this._joinSeeMeRoom('chatRoom');
+        this._joinSeeMeRoom('classRoom');
+
+    }
+
+    private _joinSeeMeRoom(type: string) {
+
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.gameMap.onPropertyChange('meetingRoom', async (newValue, oldValue, allProps) => {
+        this.gameMap.onPropertyChange(type, async (newValue, oldValue, allProps) => {
+            console.log('onPropertyChange', type)
+
             if (newValue === undefined) {
                 layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 await coWebsiteManager.closeCoWebsite();
@@ -799,22 +809,6 @@ export class GameScene extends ResizableScene implements CenterListener {
                     const peerId = this.seeMeePeer.getPeerId();
                     const baseUrl = `${SEEME_SECURE_CONNECTION ? 'https' : 'http'}://${SEEME_URL}`;
 
-                    let hasModerator = allProps.get('hasModerator') != undefined ? allProps.get('hasModerator') : true;
-                    const hasStandby = allProps.get('hasStandby') != undefined ? allProps.get('hasStandby') : true;
-                    const moderated = allProps.get('moderated') != undefined ? allProps.get('moderated') : false;
-
-                    if (hasStandby || moderated) {
-                        hasModerator = true;
-                    }
-
-                    let type = 'meetingRoom';
-
-                    if (hasModerator && hasStandby && moderated) {
-                        type = 'classRoom';
-                    } else  if(!hasModerator && !hasStandby && !moderated) {
-                        type = 'chatRoom';
-                    }
-
                     try {
                         await utils.makeRequest<RoomCreatedInterface>(`${baseUrl}/rooms?modId=${peerId}&roomId=${newValue}&disableAutoClosing=false&type=${type}`, {method: 'POST'});
                     } catch (e) {
@@ -828,7 +822,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                     coWebsiteManager.loadCoWebsite(url, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, allProps.get('openWebsitePolicy') as string || "camera; microphone", false);
 
                     coWebsiteManager.width = 1300;
-                    layoutManager.removeActionButton('meetingRoom', this.userInputManager);
+                    layoutManager.removeActionButton(type, this.userInputManager);
                     this.inMeetingRoom = true;
                     this.connection.setJoinMeetingRoom(true);
                 };
@@ -840,7 +834,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                     if (message === undefined) {
                         message = 'Press SPACE or touch here to open web site';
                     }
-                    layoutManager.addActionButton('seeMeRoom', message.toString(), async () => {
+                    layoutManager.addActionButton(type, message.toString(), async () => {
                         await openWebsiteFunction();
                     }, this.userInputManager);
                 } else {
