@@ -29,6 +29,7 @@
     "@types/simple-peer": "^9.6.0",
     "@types/socket.io-client": "^1.4.32",
     "axios": "^0.21.1",
+    "crypto-random-string": "^4.0.0",
     "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
     "mediasoup-client": "^3.6.30",

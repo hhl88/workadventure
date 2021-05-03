@@ -23,7 +23,7 @@ import {
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
     UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage, RefreshRoomMessage,
-    UserJoinedSeeMeRoomMessage
+    UserJoinedMeetingRoomMessage
 } from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
@@ -238,9 +238,9 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleUserJoinedSeeMeRoomMessage(client: ExSocketInterface, userJoinedSeeMeRoomMessage: UserJoinedSeeMeRoomMessage) {
+    handleUserJoinedMeetingRoomMessage(client: ExSocketInterface, userJoinedMeetingRoomMessage: UserJoinedMeetingRoomMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setUserjoinedseemeroommessage(userJoinedSeeMeRoomMessage);
+        pusherToBackMessage.setUserjoinedmeetingroommessage(userJoinedMeetingRoomMessage);
         client.backConnection.write(pusherToBackMessage);
     }
 

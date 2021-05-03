@@ -153,7 +153,7 @@ export class GameRoom {
     }
 
     private updateUserGroup(user: User): void {
-        if(user.isInSeeMeeRoom && user.group) {
+        if(user.isInMeetingRoom && user.group) {
             this.leaveGroup(user);
         } else {
             user.group?.updatePosition();
@@ -251,7 +251,7 @@ export class GameRoom {
         let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
         let matchingItem: User | Group | null = null;
 
-        if(user.isInSeeMeeRoom) {
+        if(user.isInMeetingRoom) {
             return matchingItem;
         }
         this.users.forEach((currentUser, userId) => {
@@ -267,7 +267,7 @@ export class GameRoom {
                 return;
             }
 
-            if(currentUser.isInSeeMeeRoom) {
+            if(currentUser.isInMeetingRoom) {
                 return;
             }
 

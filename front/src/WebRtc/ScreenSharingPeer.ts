@@ -118,6 +118,7 @@ export class ScreenSharingPeer extends Peer {
             if(!this.toClose){
                 return;
             }
+            console.log('destroy')
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.

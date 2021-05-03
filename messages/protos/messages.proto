@@ -31,7 +31,7 @@ message SilentMessage {
   bool silent = 1;
 }
 
-message UserJoinedSeeMeRoomMessage {
+message UserJoinedMeetingRoomMessage {
   bool joined = 1;
 }
 message UserJoinedGroupMessage {
@@ -93,7 +93,7 @@ message ClientToServerMessage {
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
-    UserJoinedSeeMeRoomMessage userJoinedSeeMeRoomMessage = 13;
+    UserJoinedMeetingRoomMessage userJoinedMeetingRoomMessage = 13;
   }
 }
 
@@ -132,7 +132,7 @@ message SubMessage {
     UserJoinedMessage userJoinedMessage = 4;
     UserLeftMessage userLeftMessage = 5;
     ItemEventMessage itemEventMessage = 6;
-    UserJoinedSeeMeRoomMessage userJoinedSeeMeRoomMessage = 7;
+    UserJoinedMeetingRoomMessage userJoinedMeetingRoomMessage = 7;
     UserJoinedGroupMessage userJoinedGroupMessage = 8;
   }
 }
@@ -325,7 +325,7 @@ message PusherToBackMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
-    UserJoinedSeeMeRoomMessage userJoinedSeeMeRoomMessage = 14;
+    UserJoinedMeetingRoomMessage userJoinedMeetingRoomMessage = 14;
   }
 }
 

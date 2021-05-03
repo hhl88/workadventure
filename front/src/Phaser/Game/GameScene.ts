@@ -181,7 +181,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private messageSubscription: Subscription | null = null;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
-    private inSeeMeRoom: boolean = false;
+    private inMeetingRoom: boolean = false;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -405,6 +405,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 }
                 const exitUrl = this.getExitUrl(layer);
                 if (exitUrl !== undefined) {
+                    if (MEETING_PLATFORM === 'seeme' && this.seeMeePeer) {
+                        this.seeMeePeer.close();
+                    }
                     this.loadNextGame(exitUrl);
                 }
             }
@@ -543,7 +546,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.removePlayer(userId);
             });
 
-            this.connection.onGroupUpdatedOrCreated(async (groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
+            this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
                 this.shareGroupPosition(groupPositionMessage);
             })
 
@@ -723,6 +726,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
+                this.inMeetingRoom = false;
                 this.stopJitsi();
             } else {
                 const openJitsiRoomFunction = () => {
@@ -735,6 +739,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                     } else {
                         this.startJitsi(roomName, undefined);
                     }
+                    this.inMeetingRoom = true;
                     layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 }
 
@@ -778,38 +783,56 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.gameMap.onPropertyChange('meetingRoom', async (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 await coWebsiteManager.closeCoWebsite();
-                this.inSeeMeRoom = false;
-                this.connection.setJoinSeeMeRoom(false);
+                this.inMeetingRoom = false;
+                this.connection.setJoinMeetingRoom(false);
             } else {
+                // eslint-disable-next-line @typescript-eslint/require-await
                 let openWebsiteFunction = async () => {
                     console.error('No suitable meeting platform found')
                 };
-                if (MEETING_PLATFORM === 'seeme') {
-                    openWebsiteFunction = async () => {
-                        const peerId = this.connection.getUserId();
-                        const baseUrl = `${SEEME_SECURE_CONNECTION ? 'https' : 'http'}://${SEEME_URL}`;
-                        try {
-                            await utils.makeRequest<RoomCreatedInterface>(`${baseUrl}/rooms?modId=${peerId}&roomId=${newValue}&disableAutoClosingRoom=false`, {method: 'POST'});
-                        } catch (e) {
-                            const flag = await utils.retryMakeRequest(`${baseUrl}/rooms/${newValue}`);
-                            if (!flag) {
-                                throw Error('Cannot connect to room');
-                            }
-                        }
-                        const url: string = `${baseUrl}/join?roomId=${newValue}&peerId=${peerId}&displayName=${this.playerName}`;
-                        coWebsiteManager.loadCoWebsite(url, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, allProps.get('openWebsitePolicy') as string | "camera; microphone", false);
-                        // coWebsiteManager.loadCoWebsite(url, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, "camera; microphone", false);
+                openWebsiteFunction = async () => {
+                    const peerId = this.seeMeePeer.getPeerId();
+                    const baseUrl = `${SEEME_SECURE_CONNECTION ? 'https' : 'http'}://${SEEME_URL}`;
 
-                        coWebsiteManager.width = 1300;
-                        layoutManager.removeActionButton('meetingRoom', this.userInputManager);
-                        this.inSeeMeRoom = true;
-                        this.connection.setJoinSeeMeRoom(true);
-                    };
-                }
+                    let hasModerator = allProps.get('hasModerator') != undefined ? allProps.get('hasModerator') : true;
+                    const hasStandby = allProps.get('hasStandby') != undefined ? allProps.get('hasStandby') : true;
+                    const moderated = allProps.get('moderated') != undefined ? allProps.get('moderated') : false;
+
+                    if (hasStandby || moderated) {
+                        hasModerator = true;
+                    }
+
+                    let type = 'meetingRoom';
+
+                    if (hasModerator && hasStandby && moderated) {
+                        type = 'classRoom';
+                    } else  if(!hasModerator && !hasStandby && !moderated) {
+                        type = 'chatRoom';
+                    }
+
+                    try {
+                        await utils.makeRequest<RoomCreatedInterface>(`${baseUrl}/rooms?modId=${peerId}&roomId=${newValue}&disableAutoClosing=false&type=${type}`, {method: 'POST'});
+                    } catch (e) {
+                        console.log('Error when creating room', e);
+                        const flag = await utils.retryMakeRequest(`${baseUrl}/rooms/${newValue}`);
+                        if (!flag) {
+                            throw Error('Cannot connect to room');
+                        }
+                    }
+                    const url: string = `${baseUrl}/join?roomId=${newValue}&peerId=${peerId}&displayName=${this.playerName}`;
+                    coWebsiteManager.loadCoWebsite(url, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, allProps.get('openWebsitePolicy') as string || "camera; microphone", false);
+
+                    coWebsiteManager.width = 1300;
+                    layoutManager.removeActionButton('meetingRoom', this.userInputManager);
+                    this.inMeetingRoom = true;
+                    this.connection.setJoinMeetingRoom(true);
+                };
+
 
                 const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
                 if (openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {

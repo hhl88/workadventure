@@ -15,7 +15,7 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
-    UserJoinedSeeMeRoomMessage,
+    UserJoinedMeetingRoomMessage,
     UserMovesMessage,
     WebRtcSignalToServerMessage,
     WorldFullWarningToRoomMessage,
@@ -85,8 +85,11 @@ const roomManager: IRoomManagerServer = {
                         if (banUserMessage !== undefined) {
                             socketManager.handlerBanUserMessage(room, user, banUserMessage);
                         }
-                    } else if (message.hasUserjoinedseemeroommessage()) {
-                        socketManager.handleUserJoinedSeeMeRoomMessage(user, message.getUserjoinedseemeroommessage() as UserJoinedSeeMeRoomMessage);
+                    } else if (message.hasUserjoinedmeetingroommessage()) {
+                        const joinedMeetingRoomMessage = message.getUserjoinedmeetingroommessage();
+                        if (joinedMeetingRoomMessage !== undefined) {
+                            socketManager.handleUserJoinedMeetingRoomMessage(user, joinedMeetingRoomMessage);
+                        }
                     } else {
                         throw new Error('Unhandled message type');
                     }

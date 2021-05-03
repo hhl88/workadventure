@@ -28,8 +28,7 @@ import {
     CharacterLayerMessage,
     PingMessage,
     SendUserMessage, BanUserMessage,
-    UserJoinedSeeMeRoomMessage,
-    UserLeftZoneMessage
+    UserJoinedMeetingRoomMessage,
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -295,12 +294,12 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public setJoinSeeMeRoom(joined: boolean): void {
-        const msg = new UserJoinedSeeMeRoomMessage();
+    public setJoinMeetingRoom(joined: boolean): void {
+        const msg = new UserJoinedMeetingRoomMessage();
         msg.setJoined(joined);
 
         const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setUserjoinedseemeroommessage(msg);
+        clientToServerMessage.setUserjoinedmeetingroommessage(msg);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }

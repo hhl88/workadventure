@@ -18,7 +18,7 @@ import {
     SilentMessage,
     SubMessage,
     SubToPusherMessage,
-    UserJoinedSeeMeRoomMessage,
+    UserJoinedMeetingRoomMessage,
     UserJoinedZoneMessage,
     UserLeftZoneMessage,
     UserMovedMessage,
@@ -113,8 +113,8 @@ export class SocketManager {
 
     }
 
-    handleUserJoinedSeeMeRoomMessage(user: User, userJoinedSeeMeRoomMessage: UserJoinedSeeMeRoomMessage) {
-        user.isInSeeMeeRoom = userJoinedSeeMeRoomMessage.getJoined();
+    handleUserJoinedMeetingRoomMessage(user: User, userJoinedMeetingRoomMessage: UserJoinedMeetingRoomMessage) {
+        user.isInMeetingRoom = userJoinedMeetingRoomMessage.getJoined();
     }
 
     handleUserMovesMessage(room: GameRoom, user: User, userMovesMessage: UserMovesMessage) {
@@ -508,7 +508,6 @@ export class SocketManager {
 
         //if (!user.socket.disconnecting) {
         user.socket.write(serverToClientMessage);
-
     }
 
     emitPlayGlobalMessage(room: GameRoom, playGlobalMessage: PlayGlobalMessage) {
