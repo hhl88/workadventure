@@ -107,8 +107,7 @@ export class SeeMePeer {
         })
 
 
-        this.Connection.disconnectMessage((data: WebRtcDisconnectMessageInterface): void => {
-            console.log('disconnectMessage', data, this.userId)
+        this.Connection.disconnectMessage( (data: WebRtcDisconnectMessageInterface): void => {
             if (data.userId === this.userId) {
                 this.close();
             } else {
@@ -119,7 +118,6 @@ export class SeeMePeer {
                         this.peerUsers.delete(peerId);
                     }
                 }
-
             }
         });
     }
@@ -296,17 +294,15 @@ export class SeeMePeer {
             }
             const url = `${SEEME_SECURE_CONNECTION ? 'wss' : 'ws'}://${SEEME_URL}/?roomId=${roomId}&peerId=${this.peerId}`;
             const protooTransport = new protooClient.WebSocketTransport(url, {headers: {'Sec-WebSocket-Protocol': 'protoo'}});
-            console.log('try to connect seerver', url)
 
             this.protoo = new protooClient.Peer(protooTransport);
 
             this.protoo.on('open', () => this.joinRoom());
-            this.protoo.on('failed', () => {
+            this.protoo.on('failed', (e) => {
+
             });
 
             this.protoo.on('disconnected', () => {
-                console.log('protoo disconnected')
-
                 // Close mediasoup Transports.
                 this.sendTransport?.close();
                 this.sendTransport = undefined;
@@ -316,7 +312,8 @@ export class SeeMePeer {
             });
 
             this.protoo.on('close', () => {
-                console.log('protoo close')
+                if (this.isClosed)
+                    return;
                 this.close();
             });
 
@@ -444,18 +441,13 @@ export class SeeMePeer {
                             this.shareVideoProducer?.close();
                             this.shareVideoProducer = undefined;
                             this.currentScreenSharing.destroy();
-                        } else {
-                            this.webcamProducer?.close();
-                            this.micProducer?.close();
-
-                            this.webcamProducer = undefined;
-                            this.micProducer = undefined;
                         }
 
                         if (!consumer)
                             break;
 
                         consumer.close();
+                        this.consumers.delete(consumerId);
 
                         break;
                     }
@@ -690,9 +682,9 @@ export class SeeMePeer {
 
 
     close() {
-        console.log('close')
         if (this.isClosed)
             return;
+
         this.isConnecting = false;
         this.isClosed = true;
         this.isConnected = false;
@@ -709,11 +701,12 @@ export class SeeMePeer {
         this.recvTransport?.close();
         this.recvTransport = undefined;
 
-        this.userPeers.forEach((_, userId) => mediaManager.removeActiveVideo('' + userId))
+        this.userPeers.forEach((_, userId) => mediaManager.removeActiveVideo('' + userId));
 
         this.userPeers = new Map<number, SeeMeVideo>();
         this.peerUsers = new Map<string, number>();
 
         this.currentScreenSharing.destroy();
+        this.consumers.forEach((consumer, _) => consumer.close());
     }
 }
