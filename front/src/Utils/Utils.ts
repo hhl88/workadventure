@@ -6,14 +6,17 @@ class Utils {
                 if (!response.ok) {
                     throw new Error(response.statusText)
                 }
-                return response.json();
+                try {
+                    return response.json();
+                } catch (e) {
+                    return response.text();
+                }
             })
             .then(data => {
                 return data
             })
             .catch((error: Error) => {
-                console.error(error) /* <-- made up logging service */
-                throw error /* <-- rethrow the error so consumer can still catch it */
+               return ''
             })
     }
 

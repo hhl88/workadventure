@@ -42,6 +42,7 @@ export class SeeMePeer {
 
     private isClosed: boolean;
     private isConnected: boolean;
+    private isConnecting: boolean;
     private loadedRtpCapabilities: boolean;
 
     private consumers: Map<String, Consumer>;
@@ -80,6 +81,7 @@ export class SeeMePeer {
         this.peerUsers = new Map();
         this.currentScreenSharing = new SeeMeScreenSharing();
         this.isSharingScreen = false;
+        this.isConnecting = false;
     }
 
     /**
@@ -96,7 +98,11 @@ export class SeeMePeer {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.Connection.receiveWebrtcStart(async (message: UserSimplePeerInterface) => {
             if (message.roomId && message) {
-                await this.connectToRoom(message.roomId);
+                if(!this.isConnecting) {
+                    this.isConnecting = true;
+                    await this.connectToRoom(message.roomId);
+
+                }
             }
         })
 
@@ -108,7 +114,7 @@ export class SeeMePeer {
             } else {
                 mediaManager.removeActiveVideo("" + data.userId);
                 this.userPeers.delete(data.userId);
-                for( const peerId of this.peerUsers.keys()) {
+                for (const peerId of this.peerUsers.keys()) {
                     if (this.peerUsers.get(peerId) === data.userId) {
                         this.peerUsers.delete(peerId);
                     }
@@ -125,6 +131,7 @@ export class SeeMePeer {
         mediaManager.removeUpdateLocalStreamEventListener(this.sendLocalVideoStreamCallback);
         mediaManager.removeUpdateLocalStreamEventListener(this.sendLocalAudioStreamCallback);
     }
+
     public getPeerId(): String {
         return this.peerId;
     }
@@ -287,9 +294,9 @@ export class SeeMePeer {
                     throw Error('Cannot connect to room');
                 }
             }
-
             const url = `${SEEME_SECURE_CONNECTION ? 'wss' : 'ws'}://${SEEME_URL}/?roomId=${roomId}&peerId=${this.peerId}`;
             const protooTransport = new protooClient.WebSocketTransport(url, {headers: {'Sec-WebSocket-Protocol': 'protoo'}});
+            console.log('try to connect seerver', url)
 
             this.protoo = new protooClient.Peer(protooTransport);
 
@@ -298,6 +305,8 @@ export class SeeMePeer {
             });
 
             this.protoo.on('disconnected', () => {
+                console.log('protoo disconnected')
+
                 // Close mediasoup Transports.
                 this.sendTransport?.close();
                 this.sendTransport = undefined;
@@ -307,6 +316,7 @@ export class SeeMePeer {
             });
 
             this.protoo.on('close', () => {
+                console.log('protoo close')
                 this.close();
             });
 
@@ -327,7 +337,7 @@ export class SeeMePeer {
                             producerPaused,
                         } = request.data;
 
-                        const { userId } = appData;
+                        const {userId} = appData;
 
                         if (appData.standBy) {
                             break;
@@ -414,7 +424,7 @@ export class SeeMePeer {
                     case 'peerClosed': {
                         const {peerId} = notification.data;
                         const userId = this.peerUsers.get(peerId);
-                        if(userId) {
+                        if (userId) {
                             mediaManager.removeActiveVideo("" + userId);
                             if (this.currentScreenSharing.isReceivingScreenSharingStream()) {
                                 this.currentScreenSharing.destroy();
@@ -422,7 +432,6 @@ export class SeeMePeer {
                             this.userPeers.delete(userId);
                             this.peerUsers.delete(peerId);
                         }
-
 
 
                         break;
@@ -681,9 +690,10 @@ export class SeeMePeer {
 
 
     close() {
+        console.log('close')
         if (this.isClosed)
             return;
-
+        this.isConnecting = false;
         this.isClosed = true;
         this.isConnected = false;
         // this.isSharingScreen = false;
@@ -699,7 +709,7 @@ export class SeeMePeer {
         this.recvTransport?.close();
         this.recvTransport = undefined;
 
-        this.userPeers.forEach((_,userId) => mediaManager.removeActiveVideo('' + userId))
+        this.userPeers.forEach((_, userId) => mediaManager.removeActiveVideo('' + userId))
 
         this.userPeers = new Map<number, SeeMeVideo>();
         this.peerUsers = new Map<string, number>();
