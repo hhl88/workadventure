@@ -819,7 +819,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                         }
                     }
                     const url: string = `${baseUrl}/join?roomId=${newValue}&peerId=${peerId}&displayName=${this.playerName}`;
-                    coWebsiteManager.loadCoWebsite(url, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, allProps.get('openWebsitePolicy') as string || "camera; microphone; autoplay", false);
+                    coWebsiteManager.loadCoWebsite(url, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, "camera; microphone; autoplay; fullscreen; picture-in-picture;", false);
 
                     coWebsiteManager.width = 1300;
                     layoutManager.removeActionButton(type, this.userInputManager);
