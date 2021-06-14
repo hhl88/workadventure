@@ -615,7 +615,7 @@ export class MediaManager {
 
         userId = this.getScreenSharingId(userId);
         const html = `
-            <div id="div-${userId}" class="video-container">
+            <div id="div-${userId}" class="video-container" style="width: 100%; height: 100%">
                 <video id="${userId}" autoplay></video>
             </div>
         `;

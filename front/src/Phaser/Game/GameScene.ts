@@ -143,7 +143,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection!: RoomConnection;
     private simplePeer!: SimplePeer;
-    private seeMeePeer!: SeeMePeer;
+    private seeMePeer!: SeeMePeer;
     private GlobalMessageManager!: GlobalMessageManager;
     public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
@@ -405,8 +405,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                 }
                 const exitUrl = this.getExitUrl(layer);
                 if (exitUrl !== undefined) {
-                    if (MEETING_PLATFORM === 'seeme' && this.seeMeePeer) {
-                        this.seeMeePeer.close();
+                    if (MEETING_PLATFORM === 'seeme' && this.seeMePeer) {
+                        this.seeMePeer.close();
                     }
                     this.loadNextGame(exitUrl);
                 }
@@ -595,7 +595,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
             // When connection is performed, let's connect SimplePeer
             if (MEETING_PLATFORM === 'seeme') {
-                this.seeMeePeer = new SeeMePeer(this.connection, this.playerName)
+                this.seeMePeer = new SeeMePeer(this.connection, this.playerName)
             } else if (MEETING_PLATFORM === 'jitsi') {
                 this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             }
@@ -806,7 +806,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                     console.error('No suitable meeting platform found')
                 };
                 openWebsiteFunction = async () => {
-                    const peerId = this.seeMeePeer.getPeerId();
+                    const peerId = this.seeMePeer.getPeerId();
                     const baseUrl = `${SEEME_SECURE_CONNECTION ? 'https' : 'http'}://${SEEME_URL}`;
 
                     try {
@@ -982,9 +982,9 @@ ${escapedMessage}
             this.simplePeer.closeAllConnections();
             this.simplePeer.unregister();
         }
-        if (this.seeMeePeer) {
-            this.seeMeePeer.unregister();
-            this.seeMeePeer.close();
+        if (this.seeMePeer) {
+            this.seeMePeer.unregister();
+            this.seeMePeer.close();
         }
 
         this.messageSubscription?.unsubscribe();
