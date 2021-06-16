@@ -613,6 +613,10 @@ export class MediaManager {
         this.removeParticipant(userId);
     }
 
+    checkActiveScreenSharingVideoExist(userId: string) {
+        return this.remoteVideo.has(this.getScreenSharingId(userId));
+    }
+
     checkActiveVideoExist(userId: string) {
         return this.remoteVideo.has(userId);
     }

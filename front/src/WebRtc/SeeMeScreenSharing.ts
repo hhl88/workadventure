@@ -37,7 +37,7 @@ export class SeeMeScreenSharing {
         if (!userId) {
             return false;
         }
-        if (!mediaManager.checkActiveVideoExist("" +userId)) {
+        if (!mediaManager.checkActiveScreenSharingVideoExist("" +userId)) {
             return false;
         }
 

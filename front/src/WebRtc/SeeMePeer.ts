@@ -27,6 +27,17 @@ export interface RoomCreatedInterface {
     id: string
 }
 
+export interface SeeMeData {
+    userId: number;
+    peerId: string;
+}
+
+export interface SeeMePeer {
+    id: string;
+    displayName: string;
+    appData: SeeMeData
+}
+
 /**
  * This class manages connections to all the peers in the same group as me.
  */
@@ -422,9 +433,7 @@ export class SeeMePeer {
                             id,
                             kind,
                             rtpParameters,
-                            type,
                             appData,
-                            producerPaused,
                         } = request.data;
 
                         const {userId} = appData;
@@ -504,6 +513,16 @@ export class SeeMePeer {
             // eslint-disable-next-line @typescript-eslint/require-await
             this.protoo.on('notification', async (notification) => {
                 switch (notification.method) {
+
+                    case 'newPeer': {
+                        const {
+                            displayName,
+                            appData,
+                        } = notification.data;
+                        this.handleNewPeer(notification.data)
+
+                        break;
+                    }
                     case 'peerClosed': {
                         const {peerId} = notification.data;
                         const userId = this.peerUsers.get(peerId);
@@ -709,6 +728,7 @@ export class SeeMePeer {
                     device: {},
                     rtpCapabilities: this.mediasoupDevice.rtpCapabilities,
                     sctpCapabilities: this.mediasoupDevice.sctpCapabilities,
+                    appData: {userId: this.userId, peerId: this.peerId}
                 });
             if (res) {
                 await this.sendLocalVideoStream();
@@ -716,6 +736,7 @@ export class SeeMePeer {
                 if (this.isSharingScreen) {
                     await this.sendLocalScreenSharingStream();
                 }
+                res.peers.forEach((peer: SeeMePeer) => this.handleNewPeer(peer));
             }
         } catch (e) {
             console.error('e', e)
@@ -822,6 +843,31 @@ export class SeeMePeer {
         }
     }
 
+    private handleNewPeer(newPeer: SeeMePeer) {
+
+        const {userId, peerId} = newPeer.appData;
+
+        let peer!: SeeMeVideo;
+        if (this.userPeers.has(userId)) {
+            peer = this.userPeers.get(userId)!!;
+        } else {
+            peer = new SeeMeVideo({
+                userId: userId,
+                name: newPeer.displayName,
+                roomId: this.roomId
+            });
+        }
+        peer.toClose = false;
+        this.userPeers.set(userId, peer);
+        this.peerUsers.set(peerId, userId);
+        mediaManager.addSeeMeActiveVideo({
+            userId: userId,
+            name: newPeer.displayName,
+            roomId: this.roomId
+        }, newPeer.displayName);
+
+    }
+
 
     close() {
         if (this.isClosed)
@@ -843,7 +889,7 @@ export class SeeMePeer {
         this.recvTransport?.close();
         this.recvTransport = undefined;
 
-        this.userPeers.forEach((_, userId) => mediaManager.removeActiveVideo('' + userId));
+        Object.values(this.userPeers).forEach((peer: SeeMeVideo) => peer.destroy());
 
         this.userPeers = new Map<number, SeeMeVideo>();
         this.peerUsers = new Map<string, number>();
