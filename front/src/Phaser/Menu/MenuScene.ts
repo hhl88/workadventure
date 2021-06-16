@@ -9,6 +9,8 @@ import {connectionManager} from "../../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../../Url/UrlManager";
 import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
 import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
+import {menuIconVisible} from "../../Stores/MenuStore";
+import {videoConstraintStore} from "../../Stores/MediaStore";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -16,7 +18,7 @@ const gameMenuIconKey = 'gameMenuIcon';
 const gameSettingsMenuKey = 'gameSettingsMenu';
 const gameShare = 'gameShare';
 
-const closedSideMenuX = -200;
+const closedSideMenuX = -1000;
 const openedSideMenuX = 0;
 
 /**
@@ -53,6 +55,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
     create() {
+        menuIconVisible.set(true);
         this.menuElement = this.add.dom(closedSideMenuX, 30).createFromCache(gameMenuKey);
         this.menuElement.setOrigin(0);
         MenuScene.revealMenusAfterInit(this.menuElement, 'gameMenu');
@@ -91,7 +94,7 @@ export class MenuScene extends Phaser.Scene {
 
         this.menuElement.addListener('click');
         this.menuElement.on('click', this.onMenuClick.bind(this));
-        
+
         worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
     }
 
@@ -118,7 +121,8 @@ export class MenuScene extends Phaser.Scene {
         this.closeAll();
         this.sideMenuOpened = true;
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
-        if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
+        const connection = gameManager.getCurrentGameScene(this).connection;
+        if (connection && connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
@@ -134,7 +138,7 @@ export class MenuScene extends Phaser.Scene {
             ease: 'Power3'
         });
     }
-    
+
     private showWorldCapacityWarning() {
         if (!this.warningContainer) {
             this.warningContainer = new WarningContainer(this);
@@ -147,7 +151,7 @@ export class MenuScene extends Phaser.Scene {
             this.warningContainer = null
             this.warningContainerTimeout = null
         }, 120000);
-        
+
     }
 
     private closeSideMenu(): void {
@@ -191,11 +195,11 @@ export class MenuScene extends Phaser.Scene {
             }
         });
 
-        let middleY = (window.innerHeight / 3) - (257);
+        let middleY = this.scale.height / 2 - 392/2;
         if(middleY < 0){
             middleY = 0;
         }
-        let middleX = (window.innerWidth / 3) - 298;
+        let middleX = this.scale.width / 2 - 457/2;
         if(middleX < 0){
             middleX = 0;
         }
@@ -235,11 +239,11 @@ export class MenuScene extends Phaser.Scene {
 
         this.gameShareOpened = true;
 
-        let middleY = (window.innerHeight / 3) - (257);
+        let middleY = this.scale.height / 2 - 85;
         if(middleY < 0){
             middleY = 0;
         }
-        let middleX = (window.innerWidth / 3) - 298;
+        let middleX = this.scale.width / 2 - 200;
         if(middleX < 0){
             middleX = 0;
         }
@@ -321,7 +325,7 @@ export class MenuScene extends Phaser.Scene {
         if (valueVideo !== this.videoQualityValue) {
             this.videoQualityValue = valueVideo;
             localUserStore.setVideoQualityValue(valueVideo);
-            mediaManager.updateCameraQuality(valueVideo);
+            videoConstraintStore.setFrameRate(valueVideo);
         }
         this.closeGameQualityMenu();
     }
@@ -348,5 +352,9 @@ export class MenuScene extends Phaser.Scene {
                 body.requestFullscreen();
             }
         }
+    }
+
+    public isDirty(): boolean {
+        return false;
     }
 }

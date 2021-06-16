@@ -1,34 +1,71 @@
 import {GameRoom} from "../Model/GameRoom";
 import {
-    BanUserMessage,
-    BatchToPusherMessage,
-    GroupLeftZoneMessage,
-    GroupUpdateZoneMessage,
+//     BanUserMessage,
+//     BatchToPusherMessage,
+//     GroupLeftZoneMessage,
+//     GroupUpdateZoneMessage,
+//     ItemEventMessage,
+//     ItemStateMessage,
+//     JoinRoomMessage,
+//     PlayGlobalMessage,
+//     PointMessage,
+//     QueryJitsiJwtMessage,
+//     RefreshRoomMessage,
+//     RoomJoinedMessage,
+//     SendJitsiJwtMessage,
+//     SendUserMessage,
+//     ServerToClientMessage,
+//     SilentMessage,
+//     SubMessage,
+//     SubToPusherMessage,
+//     UserJoinedMeetingRoomMessage,
+//     UserJoinedZoneMessage,
+//     UserLeftZoneMessage,
+//     UserMovedMessage,
+//     UserMovesMessage,
+//     WebRtcDisconnectMessage,
+//     WebRtcSignalToClientMessage,
+//     WebRtcSignalToServerMessage,
+//     WebRtcStartMessage,
+//     WorldFullWarningMessage,
+// <<<<<<< HEAD
+//     Zone as ProtoZone
+// =======
+//     UserLeftZoneMessage,
+//     EmoteEventMessage,
+//     BanUserMessage, RefreshRoomMessage, EmotePromptMessage,
+// >>>>>>> upstream/develop
     ItemEventMessage,
     ItemStateMessage,
-    JoinRoomMessage,
     PlayGlobalMessage,
     PointMessage,
-    QueryJitsiJwtMessage,
-    RefreshRoomMessage,
     RoomJoinedMessage,
-    SendJitsiJwtMessage,
-    SendUserMessage,
     ServerToClientMessage,
     SilentMessage,
     SubMessage,
-    SubToPusherMessage,
-    UserJoinedMeetingRoomMessage,
-    UserJoinedZoneMessage,
-    UserLeftZoneMessage,
     UserMovedMessage,
     UserMovesMessage,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
+    QueryJitsiJwtMessage,
+    SendJitsiJwtMessage,
+    SendUserMessage,
+    JoinRoomMessage,
+    Zone as ProtoZone,
+    BatchToPusherMessage,
+    SubToPusherMessage,
+    UserJoinedMeetingRoomMessage,
+    UserJoinedZoneMessage,
+    GroupUpdateZoneMessage,
+    GroupLeftZoneMessage,
     WorldFullWarningMessage,
-    Zone as ProtoZone
+    UserLeftZoneMessage,
+    EmoteEventMessage,
+    BanUserMessage,
+    RefreshRoomMessage,
+    EmotePromptMessage,
 } from "../Messages/generated/messages_pb";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -69,6 +106,7 @@ export class SocketManager {
     private rooms: Map<string, GameRoom> = new Map<string, GameRoom>();
 
     constructor() {
+        
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
             gaugeManager.incNbClientPerRoomGauge(roomId);
         });
@@ -267,9 +305,16 @@ export class SocketManager {
                 (user: User, group: Group) => this.disConnectedUser(user, group),
                 MINIMUM_DISTANCE,
                 GROUP_RADIUS,
-                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => this.onZoneEnter(thing, fromZone, listener),
-                (thing: Movable, position: PositionInterface, listener: ZoneSocket) => this.onClientMove(thing, position, listener),
-                (thing: Movable, newZone: Zone | null, listener: ZoneSocket) => this.onClientLeave(thing, newZone, listener)
+// <<<<<<< HEAD
+//                 (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => this.onZoneEnter(thing, fromZone, listener),
+//                 (thing: Movable, position: PositionInterface, listener: ZoneSocket) => this.onClientMove(thing, position, listener),
+//                 (thing: Movable, newZone: Zone | null, listener: ZoneSocket) => this.onClientLeave(thing, newZone, listener)
+// =======
+                (thing: Movable, fromZone: Zone|null, listener: ZoneSocket) => this.onZoneEnter(thing, fromZone, listener),
+                (thing: Movable, position:PositionInterface, listener: ZoneSocket) => this.onClientMove(thing, position, listener),
+                (thing: Movable, newZone: Zone|null, listener: ZoneSocket) => this.onClientLeave(thing, newZone, listener),
+                (emoteEventMessage:EmoteEventMessage, listener: ZoneSocket) => this.onEmote(emoteEventMessage, listener),
+// >>>>>>> upstream/develop
             );
             gaugeManager.incNbRoomGauge();
             this.rooms.set(roomId, world);
@@ -302,6 +347,9 @@ export class SocketManager {
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
+            if (thing.visitCardUrl) {
+                userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
+            }
             userJoinedZoneMessage.setCompanion(thing.companion);
 
             const subMessage = new SubToPusherMessage();
@@ -345,7 +393,19 @@ export class SocketManager {
         }
     }
 
-    private emitCreateUpdateGroupEvent(client: ZoneSocket, fromZone: Zone | null, group: Group): void {
+// <<<<<<< HEAD
+//     private emitCreateUpdateGroupEvent(client: ZoneSocket, fromZone: Zone | null, group: Group): void {
+// =======
+
+    private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
+        const subMessage = new SubToPusherMessage();
+        subMessage.setEmoteeventmessage(emoteEventMessage);
+
+        emitZoneMessage(subMessage, client);
+    }
+
+    private emitCreateUpdateGroupEvent(client: ZoneSocket, fromZone: Zone|null, group: Group): void {
+// >>>>>>> upstream/develop
         const position = group.getPosition();
         const pointMessage = new PointMessage();
         pointMessage.setX(Math.floor(position.x));
@@ -612,6 +672,9 @@ export class SocketManager {
                 userJoinedMessage.setName(thing.name);
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
+                if (thing.visitCardUrl) {
+                    userJoinedMessage.setVisitcardurl(thing.visitCardUrl);
+                }
                 userJoinedMessage.setCompanion(thing.companion);
 
                 const subMessage = new SubToPusherMessage();
@@ -769,6 +832,13 @@ export class SocketManager {
 
             recipient.socket.write(clientMessage);
         });
+    }
+
+    handleEmoteEventMessage(room: GameRoom, user: User, emotePromptMessage: EmotePromptMessage) {
+        const emoteEventMessage = new EmoteEventMessage();
+        emoteEventMessage.setEmote(emotePromptMessage.getEmote());
+        emoteEventMessage.setActoruserid(user.id);
+        room.emitEmoteEvent(user, emoteEventMessage);
     }
 }
 
