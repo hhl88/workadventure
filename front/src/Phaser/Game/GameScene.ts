@@ -503,18 +503,13 @@ export class GameScene extends DirtyScene implements CenterListener {
 
     //todo: in a dedicated class/function?
     initCamera() {
-// <<<<<<< HEAD
-//         this.cameras.main.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
-// =======
+
         this.cameras.main.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
         this.cameras.main.startFollow(this.CurrentPlayer, true);
-// >>>>>>> upstream/develop
         this.updateCameraOffset();
     }
 
-// =======
     addLayer(Layer: Phaser.Tilemaps.TilemapLayer) {
-// >>>>>>> upstream/develop
         this.Layers.push(Layer);
     }
 
@@ -552,10 +547,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-// <<<<<<< HEAD
-//         } catch (err) {
-//             if (err instanceof TextureError) {
-// =======
+
             this.CurrentPlayer.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
@@ -567,7 +559,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             })
         } catch (err) {
             if (err instanceof TextureError) {
-// >>>>>>> upstream/develop
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
             }
             throw err;
@@ -607,14 +598,10 @@ export class GameScene extends DirtyScene implements CenterListener {
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
-// <<<<<<< HEAD
-//     update(time: number, delta: number): void {
-//         mediaManager.setLastUpdateScene();
-// =======
+
     update(time: number, delta: number): void {
         this.dirty = false;
         mediaManager.updateScene();
-// >>>>>>> upstream/develop
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
         // Let's handle all events
@@ -754,18 +741,11 @@ export class GameScene extends DirtyScene implements CenterListener {
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
-// <<<<<<< HEAD
-//     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-//         const properties: ITiledMapLayerProperty[] = layer.properties;
 
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         this.updateCameraOffset();
     }
-
-// <<<<<<< HEAD
-//     private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
-    // const properties: ITiledMapLayerProperty[] = layer.properties;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async onMapLoad(data: any): Promise<void> {
@@ -851,8 +831,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     }
 
     //todo: push that into the gameManager
-// <<<<<<< HEAD
-//     private async loadNextGame(exitSceneIdentifier: string) {
 
     /**
      * Initializes the connection to Pusher.
@@ -955,8 +933,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 this.startJitsi(room, jwt);
             });
 
-            // When connection is performed, let's connect SimplePeer
-// <<<<<<< HEAD
+
             if (MEETING_PLATFORM === 'seeme') {
                 this.seeMePeer = new SeeMePeer(this.connection, this.playerName)
             } else if (MEETING_PLATFORM === 'jitsi') {
@@ -965,15 +942,6 @@ export class GameScene extends DirtyScene implements CenterListener {
 
             }
 
-            // this.presentationModeSprite.setVisible(true);
-            // this.chatModeSprite.setVisible(true);
-            // this.openChatIcon.setVisible(true);
-            // audioManager.decreaseVolume();
-
-// =======
-//             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
-//             peerStore.connectToSimplePeer(this.simplePeer);
-// >>>>>>> upstream/develop
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
             if (MEETING_PLATFORM === 'jitsi') {
@@ -1059,9 +1027,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             return {}
         }
     }
-
-// <<<<<<< HEAD
-//     addLayer(Layer: Phaser.Tilemaps.StaticTilemapLayer) {
 
     private triggerOnMapLayerPropertyChange() {
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
@@ -1295,14 +1260,6 @@ ${escapedMessage}
             this.userInputManager.disableControls();
         }));
 
-// <<<<<<< HEAD
-//         this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(() => {
-//             this.userInputManager.restoreControls();
-//         }));
-//         let scriptedBubbleSprite: Sprite;
-//         this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(() => {
-//             scriptedBubbleSprite = new Sprite(this, this.CurrentPlayer.x + 25, this.CurrentPlayer.y, 'circleSprite-white');
-// =======
         this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent) => {
             const url = new URL(playSoundEvent.url, this.MapUrlFile);
             soundManager.playSound(this.load, this.sound, url.toString(), playSoundEvent.config);
@@ -1325,7 +1282,6 @@ ${escapedMessage}
         let scriptedBubbleSprite: Sprite;
         this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(() => {
             scriptedBubbleSprite = new Sprite(this, this.CurrentPlayer.x + 25, this.CurrentPlayer.y, 'circleSprite-white');
-// >>>>>>> upstream/develop
             scriptedBubbleSprite.setDisplayOrigin(48, 48);
             this.add.existing(scriptedBubbleSprite);
         }));
@@ -1448,10 +1404,8 @@ ${escapedMessage}
         return (this.getProperties(map, "script") as string[]).map((script) => (new URL(script, this.MapUrlFile)).toString());
     }
 
-// =======
     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
         const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
-// >>>>>>> upstream/develop
         if (!properties) {
             return undefined;
         }
@@ -1462,19 +1416,15 @@ ${escapedMessage}
         return obj.value;
     }
 
-// =======
     private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
         const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
-// >>>>>>> upstream/develop
         if (!properties) {
             return [];
         }
         return properties.filter((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase()).map((property) => property.value);
     }
 
-// =======
     private loadNextGame(exitSceneIdentifier: string): void {
-// >>>>>>> upstream/develop
         const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
         gameManager.loadMap(room, this.scene).catch(() => {
@@ -1704,11 +1654,7 @@ ${escapedMessage}
         const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
         // Let's put this in Game coordinates by applying the zoom level:
 
-// <<<<<<< HEAD
-//         this.cameras.main.startFollow(this.CurrentPlayer, true, 1, 1, xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
-// =======
         this.cameras.main.setFollowOffset((xCenter - game.offsetWidth / 2) * window.devicePixelRatio / this.scale.zoom, (yCenter - game.offsetHeight / 2) * window.devicePixelRatio / this.scale.zoom);
-// >>>>>>> upstream/develop
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)

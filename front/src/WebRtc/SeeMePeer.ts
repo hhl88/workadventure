@@ -71,13 +71,6 @@ export class SeeMePeer {
     private readonly unsubscribers: (() => void)[] = [];
 
     constructor(private Connection: RoomConnection, private myName: string) {
-        // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
-        // this.sendLocalVideoStream.bind(this);
-        // this.sendLocalAudioStream.bind(this);
-
-        // this.sendLocalScreenSharingStream.bind(this);
-        // this.stopLocalScreenSharingStream.bind(this);
-
 
         this.userId = this.Connection.getUserId();
         this.peerId = localStorage.getItem('seeme.peerId') || cryptoRandomString({length: 8}).toLowerCase();
@@ -166,17 +159,7 @@ export class SeeMePeer {
             } else {
                 this.sendLocalScreenSharingStream();
             }
-            // if (streamResult.stream !== null) {
-            //     this.sendLocalScreenSharingStream();
-            // } else {
-            //     if (localScreenCapture) {
-            //         this.stopLocalScreenSharingStream(localScreenCapture);
-            //         localScreenCapture = null;
-            //     }
-            // }
         }));
-
-
     }
 
     /**
@@ -268,8 +251,6 @@ export class SeeMePeer {
                         track.stop();
                     }
                 }
-
-
             }
         }
     }
@@ -369,7 +350,6 @@ export class SeeMePeer {
                 });
             }
         }
-
     }
 
     /**
@@ -541,8 +521,6 @@ export class SeeMePeer {
                         const {consumerId, appData} = notification.data;
                         const consumer = this.consumers.get(consumerId);
                         if (appData.share) {
-                            // this.shareVideoProducer?.close();
-                            // this.shareVideoProducer = undefined;
                             this.currentScreenSharing.destroy(appData.userId);
                         }
 
@@ -559,13 +537,6 @@ export class SeeMePeer {
                         const {consumerId, appData} = notification.data;
                         const consumer = this.consumers.get(consumerId);
 
-                        // if (appData.share) {
-                        //     this.shareVideoProducer?.pause();
-                        // } else {
-                        //     this.webcamProducer?.pause();
-                        //     this.micProducer?.pause();
-                        // }
-
                         if (!consumer)
                             break;
 
@@ -577,13 +548,6 @@ export class SeeMePeer {
                     case 'consumerResumed': {
                         const {consumerId, appData} = notification.data;
                         const consumer = this.consumers.get(consumerId);
-
-                        // if (appData.share) {
-                        //     this.shareVideoProducer?.resume();
-                        // } else {
-                        //     this.webcamProducer?.resume();
-                        //     this.micProducer?.resume();
-                        // }
 
                         if (!consumer)
                             break;
@@ -662,7 +626,6 @@ export class SeeMePeer {
     }
 
     private async createRecvTransport() {
-
         const transportInfo = await this.protoo?.request(
             'createWebRtcTransport',
             {
@@ -761,7 +724,6 @@ export class SeeMePeer {
 
         this.micProducer.close();
 
-
         try {
             await this.protoo?.request('closeProducer', {producerId: this.micProducer.id});
         } catch (error) {
@@ -798,12 +760,12 @@ export class SeeMePeer {
 
             }
         }
-
     }
 
     private pauseWebcam() {
         if (!this.webcamProducer)
             return;
+
         if (this.prevWebcamState === SharingState.ON) {
             try {
                 this.webcamProducer.pause();
@@ -814,7 +776,6 @@ export class SeeMePeer {
             }
         }
     }
-
 
     private resumeWebcam() {
         if (!this.webcamProducer)
@@ -845,38 +806,38 @@ export class SeeMePeer {
     }
 
     private handleNewPeer(newPeer: SeeMePeer) {
-        const {userId, peerId} = newPeer.appData;
+        if (newPeer && newPeer.appData) {
+            const {userId, peerId} = newPeer.appData;
 
-        let peer!: SeeMeVideo;
-        if (this.userPeers.has(userId)) {
-            peer = this.userPeers.get(userId)!!;
-        } else {
-            peer = new SeeMeVideo({
+            let peer!: SeeMeVideo;
+            if (this.userPeers.has(userId)) {
+                peer = this.userPeers.get(userId)!!;
+            } else {
+                peer = new SeeMeVideo({
+                    userId: userId,
+                    name: newPeer.displayName,
+                    roomId: this.roomId
+                });
+            }
+            peer.toClose = false;
+            this.userPeers.set(userId, peer);
+            this.peerUsers.set(peerId, userId);
+            mediaManager.addSeeMeActiveVideo({
                 userId: userId,
                 name: newPeer.displayName,
                 roomId: this.roomId
-            });
+            }, newPeer.displayName);
         }
-        peer.toClose = false;
-        this.userPeers.set(userId, peer);
-        this.peerUsers.set(peerId, userId);
-        mediaManager.addSeeMeActiveVideo({
-            userId: userId,
-            name: newPeer.displayName,
-            roomId: this.roomId
-        }, newPeer.displayName);
-
     }
-
 
     close() {
         if (this.isClosed)
             return;
+
         requestedSeeMeConnectionState.closed();
         this.isConnecting = false;
         this.isClosed = true;
         this.isConnected = false;
-        // this.isSharingScreen = false;
 
         // Close protoo Peer
         this.protoo?.close();

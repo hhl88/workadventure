@@ -84,7 +84,7 @@ services:
       - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
       - "traefik.http.routers.pusher-ssl.tls=true"
       - "traefik.http.routers.pusher-ssl.service=pusher"
-      - "traefik.http.routers.front-ssl.tls.certresolver=myresolver"
+      - "traefik.http.routers.pusher-ssl.tls.certresolver=myresolver"
     restart: unless-stopped
 
   back:
