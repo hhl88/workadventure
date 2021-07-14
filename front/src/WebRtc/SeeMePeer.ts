@@ -138,17 +138,22 @@ export class SeeMePeer {
                 // Let's ignore screen sharing errors, we will deal with those in a different way.
                 return;
             }
-            if (this.isSharingWebcam) {
-                this.toggleWebcam()
-            } else {
-                this.sendLocalVideoStream();
+            if (streamResult.constraints) {
+                if (this.isSharingWebcam) {
+                    this.toggleWebcam(!!streamResult.constraints.video)
+                } else {
+                    if (streamResult.constraints.video)
+                        this.sendLocalVideoStream();
+                }
+
+                if (this.isSharingMic) {
+                    this.toggleMic(!!streamResult.constraints.audio)
+                } else {
+                    if (streamResult.constraints.audio)
+                        this.sendLocalAudioStream();
+                }
             }
 
-            if (this.isSharingMic) {
-                this.toggleMic()
-            } else {
-                this.sendLocalAudioStream();
-            }
         }));
 
         this.unsubscribers.push(screenSharingLocalStreamStore.subscribe((streamResult) => {
@@ -205,17 +210,16 @@ export class SeeMePeer {
         return null;
     }
 
-    private toggleMic() {
-        if (this.prevMicState === SharingState.OFF) {
+    private toggleMic(enable: boolean) {
+        if (enable) {
             this.resumeMic();
         } else {
             this.pauseMic();
         }
-
     }
 
-    private toggleWebcam() {
-        if (this.prevWebcamState === SharingState.OFF) {
+    private toggleWebcam(enable: boolean) {
+        if (enable) {
             this.resumeWebcam();
         } else {
             this.pauseWebcam();
@@ -422,11 +426,8 @@ export class SeeMePeer {
             });
 
             this.protoo.on('request', async (request, accept, reject) => {
-                // console.log('proto "request" event [method:%s, data:%o]', request.method, request.data);
-
                 switch (request.method) {
                     case 'newConsumer': {
-
                         const {
                             peerId,
                             producerId,
@@ -515,14 +516,10 @@ export class SeeMePeer {
                 switch (notification.method) {
 
                     case 'newPeer': {
-                        const {
-                            displayName,
-                            appData,
-                        } = notification.data;
                         this.handleNewPeer(notification.data)
-
                         break;
                     }
+
                     case 'peerClosed': {
                         const {peerId} = notification.data;
                         const userId = this.peerUsers.get(peerId);
@@ -537,7 +534,6 @@ export class SeeMePeer {
                             this.userPeers.delete(userId);
                             this.peerUsers.delete(peerId);
                         }
-
 
                         break;
                     }
@@ -783,7 +779,6 @@ export class SeeMePeer {
             }
         } catch (error) {
             console.error('cannot close producer', error);
-
         }
 
         this.shareVideoProducer = undefined;
@@ -794,25 +789,29 @@ export class SeeMePeer {
         if (!this.micProducer)
             return;
 
-        try {
-            this.micProducer.pause();
-            this.prevMicState = SharingState.OFF;
-        } catch (e) {
-            console.error('cannot pause microphone', e);
+        if (this.prevMicState === SharingState.ON) {
+            try {
+                this.micProducer.pause();
+                this.prevMicState = SharingState.OFF;
+            } catch (e) {
+                console.error('cannot pause microphone', e);
 
+            }
         }
+
     }
 
     private pauseWebcam() {
         if (!this.webcamProducer)
             return;
+        if (this.prevWebcamState === SharingState.ON) {
+            try {
+                this.webcamProducer.pause();
+                this.prevWebcamState = SharingState.OFF;
+            } catch (e) {
+                console.error('cannot pause webcam', e);
 
-        try {
-            this.webcamProducer.pause();
-            this.prevWebcamState = SharingState.OFF;
-        } catch (e) {
-            console.error('cannot pause webcam', e);
-
+            }
         }
     }
 
@@ -821,12 +820,13 @@ export class SeeMePeer {
         if (!this.webcamProducer)
             return;
 
-        try {
-            this.webcamProducer.resume();
-            this.prevWebcamState = SharingState.ON;
-        } catch (e) {
-            console.error('cannot resume webcam', e);
-
+        if (this.prevWebcamState === SharingState.OFF) {
+            try {
+                this.webcamProducer.resume();
+                this.prevWebcamState = SharingState.ON;
+            } catch (e) {
+                console.error('cannot resume webcam', e);
+            }
         }
     }
 
@@ -834,17 +834,17 @@ export class SeeMePeer {
         if (!this.micProducer)
             return;
 
-        try {
-            this.micProducer.resume();
-            this.prevMicState = SharingState.ON;
-        } catch (e) {
-            console.error('cannot resume microphone', e);
-
+        if (this.prevMicState === SharingState.OFF) {
+            try {
+                this.micProducer.resume();
+                this.prevMicState = SharingState.ON;
+            } catch (e) {
+                console.error('cannot resume microphone', e);
+            }
         }
     }
 
     private handleNewPeer(newPeer: SeeMePeer) {
-
         const {userId, peerId} = newPeer.appData;
 
         let peer!: SeeMeVideo;
