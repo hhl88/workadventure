@@ -50,6 +50,7 @@ services:
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       PUSHER_URL: "//pusher.${DOMAIN}"
       UPLOADER_URL: "//uploader.${DOMAIN}"
+    command: echo Done!!
     labels:
       - "traefik.http.routers.front.rule=Host(`play.${DOMAIN}`)"
       - "traefik.http.routers.front.entryPoints=web,traefik"
@@ -96,12 +97,11 @@ services:
       STARTUP_COMMAND_1: yarn install
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       ALLOW_ARTILLERY: "true"
-      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
       MAX_PER_GROUP: "MAX_PER_GROUP"
       ADMIN_API_URL: $ADMIN_API_URL
-      ADMIN_API_TOKEN: $ADMIN_API_TOKEN
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
     labels:
       - "traefik.http.routers.back.rule=Host(`api.${DOMAIN}`)"
       - "traefik.http.routers.back.entryPoints=web"

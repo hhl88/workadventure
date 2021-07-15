@@ -77,7 +77,7 @@ export class SeeMePeer {
         localStorage.setItem('seeme.peerId', this.peerId);
 
         this.initialise();
-        this.isClosed = true;
+        this.isClosed = false;
         this.isConnected = false;
         this.loadedRtpCapabilities = false;
         this.consumers = new Map();
@@ -400,8 +400,6 @@ export class SeeMePeer {
             });
 
             this.protoo.on('close', () => {
-                if (this.isClosed)
-                    return;
                 this.close();
             });
 
@@ -464,7 +462,6 @@ export class SeeMePeer {
                                     }
 
                                     peer.streamFromTrack(consumer.track);
-                                    peer.toClose = false;
                                     this.userPeers.set(userId, peer);
                                     this.peerUsers.set(peerId, userId);
 
@@ -510,7 +507,6 @@ export class SeeMePeer {
                             if (this.currentScreenSharing.isReceivingScreenSharingStream()) {
                                 this.currentScreenSharing.destroy(userId);
                             }
-
                             this.userPeers.delete(userId);
                             this.peerUsers.delete(peerId);
                         }
@@ -819,7 +815,6 @@ export class SeeMePeer {
                     roomId: this.roomId
                 });
             }
-            peer.toClose = false;
             this.userPeers.set(userId, peer);
             this.peerUsers.set(peerId, userId);
             mediaManager.addSeeMeActiveVideo({
@@ -849,11 +844,12 @@ export class SeeMePeer {
 
         this.recvTransport?.close();
         this.recvTransport = undefined;
+        for (const peer of this.userPeers.values()) {
+            peer.destroy()
+        }
 
-        Object.values(this.userPeers).forEach((peer: SeeMeVideo) => peer.destroy());
-
-        this.userPeers = new Map<number, SeeMeVideo>();
-        this.peerUsers = new Map<string, number>();
+        this.userPeers.clear();
+        this.peerUsers.clear();
 
         this.currentScreenSharing.destroyCurrent();
         this.currentScreenSharing.destroyMySelf();

@@ -10,6 +10,8 @@ import {isIOS} from "../WebRtc/DeviceUtils";
 import {WebviewOnOldIOS} from "./Errors/WebviewOnOldIOS";
 import {MEETING_PLATFORM} from "../Enum/EnvironmentVariable";
 
+let bubbleChatConnectionTimeOut: NodeJS.Timeout | null = null;
+
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -167,8 +169,6 @@ const userMoved5SecondsAgoStore = readable(false, function start(set) {
 });
 
 
-
-
 /**
  * A store containing whether the mouse is getting close the bottom right corner.
  */
@@ -197,15 +197,20 @@ const mouseInBottomRight = readable(false, function start(set) {
  * A store containing whether the peer was connected to seeme in the last 5 seconds
  */
 export const peerConnected5SecondsAgoSeeMeStore = readable(false, function start(set) {
-    let timeout: NodeJS.Timeout | null = null;
-    const unsubscribe = seeMeStore.subscribe(({connected}) => {
+    const unsubscribe = seeMeStore.subscribe(({connected, closed, connecting}) => {
         if (connected === true) {
-            if (timeout) {
-                clearTimeout(timeout);
+            if (bubbleChatConnectionTimeOut) {
+                clearTimeout(bubbleChatConnectionTimeOut);
+                bubbleChatConnectionTimeOut = null;
             }
             set(true);
         } else {
-            timeout = setTimeout(() => {
+            if (bubbleChatConnectionTimeOut) {
+                clearTimeout(bubbleChatConnectionTimeOut);
+                bubbleChatConnectionTimeOut = null;
+            }
+
+            bubbleChatConnectionTimeOut = setTimeout(() => {
                 set(false);
             }, 5000);
 
@@ -237,6 +242,7 @@ export const cameraEnergySavingStore = derived(
         const flag = MEETING_PLATFORM === 'jitsi'
             ? $peerStore.size === 0
             : !$peerConnected5SecondsAgoSeeMeStore;
+        // console.log('cameraEnergySavingStore', MEETING_PLATFORM, MEETING_PLATFORM === 'jitsi', $peerStore.size, $peerConnected5SecondsAgoSeeMeStore, $enabledWebCam10secondsAgoStore);
 
         return !$userMoved5SecondsAgoStore &&
             flag &&

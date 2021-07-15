@@ -294,6 +294,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         //this function must stay at the end of preload function
         addLoader(this);
+
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -310,6 +311,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
     //hook create scene
     create(): void {
+        console.log('create');
         this.trackDirtyAnims();
 
         gameManager.gameSceneIsCreated(this);
@@ -442,6 +444,10 @@ export class GameScene extends DirtyScene implements CenterListener {
         layoutManager.setListener(this);
         this.triggerOnMapLayerPropertyChange();
         this.listenToIframeEvents();
+        console.log('create' , !!this.seeMePeer)
+        if (MEETING_PLATFORM === 'seeme' && this.seeMePeer) {
+            this.seeMePeer.close();
+        }
 
 
         if (!this.room.isDisconnected()) {
