@@ -51,6 +51,7 @@ services:
       PUSHER_URL: "//pusher.${DOMAIN}"
       UPLOADER_URL: "//uploader.${DOMAIN}"
     command: echo Done!!
+    entrypoint: /bin/bash
     labels:
       - "traefik.http.routers.front.rule=Host(`play.${DOMAIN}`)"
       - "traefik.http.routers.front.entryPoints=web,traefik"
